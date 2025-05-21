@@ -1,49 +1,36 @@
 import React, { useState } from "react";
 import "../css/pstyles.css";
+import "../css/comman.css";
 import Sidebar from "./Sidebar";
-import flower from "../css/image.png"; 
-import { FaSearch, FaToggleOn, FaToggleOff } from "react-icons/fa";
+import flower from "../css/image.png";
+import { FaTimes } from "react-icons/fa";
+import { toast, ToastContainer } from "react-toastify";
+import 'react-toastify/dist/ReactToastify.css';
 
 const ProductPage = () => {
   const [isEnabled, setIsEnabled] = useState(true);
-  const [formData, setFormData] = useState({
-    name: "",
-    price: "",
-    quantity: 1,
-    details: "",
-    image: null,
-  });
+  const [formData, setFormData] = useState({ name: "", price: "", quantity: 1, details: "", image: null });
   const [formErrors, setFormErrors] = useState({});
+  const [products, setProducts] = useState([]);
+  const [showConfirmAdd, setShowConfirmAdd] = useState(false);
+  const [editProduct, setEditProduct] = useState(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
+  const [showEditModal, setShowEditModal] = useState(false);
 
-  const handleToggle = () => {
-    setIsEnabled(!isEnabled);
-  };
-  const handleDecrement = () => {
-    if (formData.quantity > 1) {
-      setFormData((prevData) => ({
-        ...prevData,
-        quantity: prevData.quantity - 1,
-      }));
-    }
-  };
+  const [showUpdateConfirm, setShowUpdateConfirm] = useState(false); // triggers the final confirm modal
+  const [selectedImage, setSelectedImage] = useState(null); // for image preview in update modal
 
-  const handleIncrement = () => {
-    setFormData((prevData) => ({
-      ...prevData,
-      quantity: prevData.quantity + 1,
-    }));
-  };
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prevData) => ({ ...prevData, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleFileChange = (e) => {
-    setFormData((prevData) => ({ ...prevData, image: e.target.files[0] }));
+    setFormData((prev) => ({ ...prev, image: e.target.files[0] }));
   };
 
   const validateForm = () => {
-    let errors = {};
+    const errors = {};
     if (!formData.name) errors.name = "Product name is required";
     if (!formData.price) errors.price = "Product price is required";
     if (!formData.quantity) errors.quantity = "Quantity is required";
@@ -57,128 +44,236 @@ const ProductPage = () => {
     const errors = validateForm();
     setFormErrors(errors);
     if (Object.keys(errors).length === 0) {
-      console.log("Form submitted", formData);
+      setShowConfirmAdd(true);
     }
+  };
+
+  const confirmAddProduct = () => {
+    const newProduct = {
+      id: Date.now(),
+      ...formData,
+      imageUrl: URL.createObjectURL(formData.image),
+    };
+    setProducts((prev) => [newProduct, ...prev]);
+    setFormData({ name: "", price: "", quantity: 1, details: "", image: null });
+    setFormErrors({});
+    setShowConfirmAdd(false);
+    toast.success("Product successfully added!");
+  };
+
+  const handleUpdate = () => {
+    if (!editProduct) return;
+
+    const updatedProduct = {
+      ...editProduct,
+      imageUrl: selectedImage
+        ? URL.createObjectURL(selectedImage)
+        : editProduct.imageUrl,
+    };
+
+    setProducts((prevProducts) =>
+      prevProducts.map((product) =>
+        product.id === updatedProduct.id ? updatedProduct : product
+      )
+    );
+
+    toast.success("Product successfully updated!");
+  };
+
+  const handleDelete = () => {
+    setProducts(products.filter(p => p.id !== showDeleteConfirm));
+    setShowDeleteConfirm(null);
+    toast.success("Product successfully deleted!");
   };
 
   return (
     <div className="app-container flex h-screen">
       <Sidebar />
-      
       <div className="main-content flex-1 p-4">
-        <header className="header bg-white shadow p-4 flex justify-between items-center border-b-2 border-black">
-          {/* Header content can go here */}
-        </header>
+        <ToastContainer />
+        <h2 className="dashboard-title mt-4 text-xl font-bold">All <span className="font-light">Product</span></h2>
 
-        <h2 className="dashboard-title mt-4">
-          <span className="title-bold">All</span>
-          <span className="title-light">Product</span>
-        </h2>
-        {/* Search and Filter */}
-        <div className="search-filter w-1/3 flex justify-end">
-            <div className="search-input relative">
-              <input
-              icon={<FaSearch className="input-icon" />}
-                type="text"
-                placeholder="Find User..."
-                className="search-bar"
-              />
+        <div className="form-product-wrapper mt-2 max-h-[60vh] overflow-auto">
+          <div className="top-controls my-4 flex gap-4 items-center justify-between">
+            <div className="add-form w-2/3">
+              <h3 className="text-lg font-semibold">Add New <span className="text-blue-500">Product</span></h3>
+              <form onSubmit={handleSubmit}>
+                {/* Form Fields */}
+                <input name="name" value={formData.name} onChange={handleChange} placeholder="Product name" />
+                <p className="error">{formErrors.name}</p>
+
+                <input type="number" name="price" value={formData.price} onChange={handleChange} placeholder="Product price" />
+                <p className="error">{formErrors.price}</p>
+
+                <input type="number" name="quantity" value={formData.quantity} onChange={handleChange} min="1" />
+                <p className="error">{formErrors.quantity}</p>
+
+                <textarea name="details" value={formData.details} onChange={handleChange} placeholder="Product details" />
+                <p className="error">{formErrors.details}</p>
+
+                <input type="file" name="image" onChange={handleFileChange} />
+                <p className="error">{formErrors.image}</p>
+
+                <button type="submit" disabled={!isEnabled}>Add Product</button>
+              </form>
             </div>
           </div>
 
-<div className="product mt-2 max-h-[60vh] overflow-auto">
-        <div className="top-controls my-4 flex gap-4 items-center justify-between">
-          {/* Add New Product Form */}
-          <div className="add-form w-2/3">
-            <h3>Add New <span>Product</span></h3>
-            <form onSubmit={handleSubmit}>
-              <div className="form-field">
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  placeholder="Enter product name"
-                />
-                {formErrors.name && <p className="error">{formErrors.name}</p>}
-              </div>
+          <div className="product-list">
+            {products.length === 0 ? (
+              <div className="empty-message text-blue-600 text-center text-lg font-medium my-8">List of uploaded products will appear here.</div>
+            ) : (
+              products.map((product) => (
+                <div key={product.id} className="product-card">
+                  <p className="price">Nu.{product.price}</p>
+                  <img src={product.imageUrl || flower} alt="product" className="w-full h-40 object-cover" />
+                  <h4 className="name">{product.name}</h4>
+                  <p className="description">{product.details}</p>
+                  <p className="quantity">Quantity: {product.quantity}</p>
+                  <div className="actions">
+                    <button onClick={() => setEditProduct(product)}>Update</button>
+                    <button onClick={() => setShowDeleteConfirm(product.id)}>Delete</button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
 
-              <div className="form-field">
-                <input
-                  type="text"
-                  name="price"
-                  value={formData.price}
-                  onChange={handleChange}
-                  placeholder="Enter product price"
-                />
-                {formErrors.price && <p className="error">{formErrors.price}</p>}
+        {/* Add Confirm Modal */}
+        {showConfirmAdd && (
+          <div className="modal-overlay">
+            <div className="modal-content">
+              <p>Are you sure you want to add this product?</p>
+              <div className="modal-buttons">
+                <button className="yes" onClick={confirmAddProduct}>Yes</button>
+                <button className="no" onClick={() => setShowConfirmAdd(false)}>No</button>
               </div>
+            </div>
+          </div>
+        )}
+        {editProduct && (
+          <div className="modal-overlay">
+            <div className="modal-content">
+              <FaTimes className="close-icon" onClick={() => setEditProduct(null)} />
 
-              <div className="form-field quantity-field">
-                <input
-                  type="number"
-                  name="quantity"
-                  value={formData.quantity}
-                  onChange={handleChange}
-                  placeholder="Enter product quantity"
-                  min="1"
-                  className="quantity-input"
-                />
-                {formErrors.quantity && <p className="error">{formErrors.quantity}</p>}
-              </div>
+              <h2 className="modal-title">
+                Update <span className="highlight">Product</span>
+              </h2>
 
-              <div className="form-field">
-                <textarea
-                  name="details"
-                  value={formData.details}
-                  onChange={handleChange}
-                  placeholder="Enter product details"
-                />
-                {formErrors.details && <p className="error">{formErrors.details}</p>}
-              </div>
+              {/* Image Preview */}
+              {selectedImage ? (
+                <img src={URL.createObjectURL(selectedImage)} alt="Preview" className="preview-img" />
+              ) : (
+                <img src={editProduct.imageUrl} alt="Current Product" className="preview-img" />
+              )}
 
-              <div className="form-field">
+              {/* Product Name */}
+              <label className="field-name">Product Name</label>
+              <input
+                type="text"
+                value={editProduct.name}
+                onChange={(e) => setEditProduct({ ...editProduct, name: e.target.value })}
+              />
+
+              {/* Price */}
+              <label className="field-name">Price</label>
+              <input
+                type="number"
+                value={editProduct.price ?? ""}
+                onChange={(e) => setEditProduct({ ...editProduct, price: e.target.value })}
+              />
+
+              {/* Quantity */}
+              <label className="field-name">Quantity</label>
+              <input
+                type="number"
+                value={editProduct.quantity}
+                onChange={(e) => setEditProduct({ ...editProduct, quantity: e.target.value })}
+              />
+
+              {/* Description */}
+              <label className="field-name">Description</label>
+              <textarea
+                value={editProduct.details}
+                onChange={(e) => setEditProduct({ ...editProduct, details: e.target.value })}
+              />
+
+              {/* File Upload */}
+              <div className="file-upload">
+                <label>Change Image (optional)</label>
                 <input
                   type="file"
-                  name="image"
-                  onChange={handleFileChange}
+                  accept="image/*"
+                  onChange={(e) => setSelectedImage(e.target.files[0])}
                 />
+                <span>{selectedImage?.name || "flowerplant.png"}</span>
               </div>
-
-              <div className="form-field">
-                <button type="submit" disabled={!isEnabled}>
-                  Add Product
-                </button>
-              </div>
-            </form>
+ <button
+              className="update-btn"
+              onClick={() => {
+                setShowUpdateConfirm(true); // show confirmation modal
+                setShowEditModal(false);    // just hide the modal, keep editProduct intact
+              }}
+            >
+              Update
+            </button>
+            </div>
           </div>
-        </div>
+        )}
+        {showEditModal && editProduct && (
+          <div className="modal-overlay">
+            {/* modal content here */}
+            <button
+              className="update-btn"
+              onClick={() => {
+                setShowUpdateConfirm(true); // show confirmation modal
+                setShowEditModal(false);    // just hide the modal, keep editProduct intact
+              }}
+            >
+              Update
+            </button>
+          </div>
+        )}
 
-        {/* Scrollable Product Cards */}
-        <div className="product-list mt-4 max-h-[60vh] overflow-auto">
-          {[...Array(20)].map((_, i) => (
-            <div key={i} className="product-card mb-4 p-4 border">
-              <p>Nu.{i + 1}</p>
-              <div className="toggle-container">
-                {isEnabled ? (
-                  <FaToggleOn className="toggle-icon" onClick={handleToggle} />
-                ) : (
-                  <FaToggleOff className="toggle-icon" onClick={handleToggle} />
-                )}
-              </div>
-              <img src={flower} alt="flower" className="w-full h-40 object-cover" />
-              <h4>Flower {i + 1}</h4>
-              <p>A flower's structure description...</p>
-              <div className="actions">
-                <button>Update</button>
-                <button>Delete</button>
+
+        {/* Confirm Modal */}
+        {showUpdateConfirm && (
+          <div className="modal-overlay">
+            <div className="modal-content">
+              <p>Are you sure you want to update this product?</p>
+              <div className="modal-buttons">
+                <button
+                  className="yes"
+                  onClick={() => {
+                    handleUpdate(); // ✅ update now
+                    setShowUpdateConfirm(false);
+                    setEditProduct(null);       // ✅ now it's safe to clear
+                    setSelectedImage(null);     // ✅ clear image state too
+                  }}
+                >
+                  Yes
+                </button>
+                <button className="no" onClick={() => setShowUpdateConfirm(false)}>Cancel</button>
               </div>
             </div>
-          ))}
-        </div>
-        </div>
-        </div>
+          </div>
+        )}
+
+        {/* Delete Confirm Modal */}
+        {showDeleteConfirm !== null && (
+          <div className="modal-overlay">
+            <div className="modal-content">
+              <p>Are you sure you want to delete this product?</p>
+              <div className="modal-buttons">
+                <button className="yes" onClick={handleDelete}>Yes</button>
+                <button className="no" onClick={() => setShowDeleteConfirm(null)}>No</button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
+    </div>
   );
 };
 
