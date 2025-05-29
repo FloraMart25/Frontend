@@ -90,6 +90,9 @@ const ProductPage = () => {
     <div className="app-container flex h-screen">
       <Sidebar />
       <div className="main-content flex-1 p-4">
+         <header className="header bg-white shadow p-4 flex justify-between items-center border-b-2 border-black">
+          {/* Header content can go here */}
+        </header>
         <ToastContainer />
         <h2 className="dashboard-title mt-4 text-xl font-bold">All <span className="font-light">Product</span></h2>
 

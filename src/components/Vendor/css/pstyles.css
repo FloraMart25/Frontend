@@ -236,6 +236,7 @@
 
 /* Price background color and remove border */
 .price {
+  margin-right: 40%;
   background-color: #F5B3AD;
   color: white; /* Optional: for contrast */
   padding: 4px 8px; /* Optional: for spacing */
