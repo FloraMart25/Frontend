@@ -9,7 +9,7 @@ import axios from 'axios';
 
 
 function LoginScreen() {
-  const [email, setEmail] = useState('phuntsho@gmail.com');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
   const dispatch = useDispatch();

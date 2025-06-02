@@ -7,7 +7,7 @@ import { toast, ToastContainer } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
 
 const ProductPage = () => {
-  const [formData, setFormData] = useState({ name: "", price: "", quantity: 1, details: "", image: null });
+  const [formData, setFormData] = useState({ name: "", price: "", quantity: "", details: "", image: null });
   const [formErrors, setFormErrors] = useState({});
   const [products, setProducts] = useState([]);
   const [showConfirmAdd, setShowConfirmAdd] = useState(false);
@@ -187,7 +187,7 @@ const ProductPage = () => {
                 <div key={product.flower_id} className="product-card">
                   <p className="price">Nu.{product.price}</p>
                   <img
-                    src={`http://localhost:8765/USERMICROSERVICE/images/${product.image}`}
+                    src={product.image.startsWith("http") ? product.image : `http://localhost:8765/USERMICROSERVICE/images/${product.image}`}
                     onError={(e) => e.target.src = "/default-product.png"}
                     alt="product"
                     className="w-full h-40 object-cover"
