@@ -16,26 +16,79 @@ import OrderPage from "./components/Vendor/js/OrderPage.jsx";
 import ProductPage from "./components/Vendor/js/ProductPage.jsx";
 import SettingsPage from "./components/Vendor/js/Setting.jsx";
 
+// Protected Route
+import ProtectedRoute from "./components/ProtectedRoute";
+
 function App() {
   return (
     <div className="App">
       <BrowserRouter>
         <Routes>
+          {/* Public Routes */}
           <Route path="/" element={<Login />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/enter-otp" element={<EnterOTP />} />
           <Route path="/reset-password" element={<ResetPassword />} />
 
           {/* Admin Routes */}
-          <Route path="/admindashboard" element={<AdminDashboard />} />
-          <Route path="/user-management" element={<UserManagement />} />
-          <Route path="/vendor-application" element={<VendorApplication />} />
+          <Route
+            path="/admindashboard"
+            element={
+              <ProtectedRoute allowedRoles={['Admin']}>
+                <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/user-management"
+            element={
+              <ProtectedRoute allowedRoles={['Admin']}>
+                <UserManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/vendor-application"
+            element={
+              <ProtectedRoute allowedRoles={['Admin']}>
+                <VendorApplication />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Vendor Routes */}
-          <Route path="/vendordashboard" element={<VendorDashboard />} />
-          <Route path="/order-page" element={<OrderPage />} />
-          <Route path="/product" element={<ProductPage />} />
-          <Route path="/setting" element={<SettingsPage />} />
+          <Route
+            path="/vendordashboard"
+            element={
+              <ProtectedRoute allowedRoles={['Vendor']}>
+                <VendorDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/order-page"
+            element={
+              <ProtectedRoute allowedRoles={['Vendor']}>
+                <OrderPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/product"
+            element={
+              <ProtectedRoute allowedRoles={['Vendor']}>
+                <ProductPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/setting"
+            element={
+              <ProtectedRoute allowedRoles={['Vendor']}>
+                <SettingsPage />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
       </BrowserRouter>
     </div>

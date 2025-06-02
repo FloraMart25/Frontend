@@ -5,50 +5,84 @@ import { toast } from 'react-toastify';
 import { setCredentials } from '../../../slices/authSlice';
 import { useLoginMutation } from '../../../slices/usersApiSlice';
 import logo from '../../../asstes/logo.png';
+import axios from 'axios';
+
 
 function LoginScreen() {
-  // Set default email here:
   const [email, setEmail] = useState('phuntsho@gmail.com');
   const [password, setPassword] = useState('');
+
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [login, { isLoading }] = useLoginMutation();
   const { userInfo } = useSelector((state) => state.auth);
+
   const { search } = useLocation();
   const sp = new URLSearchParams(search);
   const redirect = sp.get('redirect') || '/';
 
- useEffect(() => {
-  if (userInfo) {
-    const authorities = userInfo?.user?.authorities?.map(a => a.authority) || [];
+  // Role-based redirect function
+ const handleRoleRedirect = (user) => {
+  const roles = user?.authorities?.map((a) => a.authority) || [];
 
-    if (authorities.includes('Admin')) {
-      navigate('/admindashboard');
-    } else if (authorities.includes('Vendor')) {
-      navigate('/vendordashboard');
-    } else {
+  if (roles.includes('Admin')) {
+    navigate('/admindashboard');
+  } else if (roles.includes('Vendor')) {
+    navigate('/vendordashboard');
+  } else if (roles.includes('Client')) {
+    navigate('/clientdashboard'); // Add this route to App.jsx if not already present
+  } else {
+    navigate('/');
+  }
+};
+
+ useEffect(() => {
+  if (userInfo?.user) {
+    if (redirect && redirect !== '/') {
       navigate(redirect);
+    } else {
+      handleRoleRedirect(userInfo.user);
     }
   }
 }, [userInfo, redirect, navigate]);
 
- const submitHandler = async (e) => {
+
+
+const submitHandler = async (e) => {
   e.preventDefault();
   try {
-    const res = await login({ email, password }).unwrap();
-    dispatch(setCredentials(res));
+    const response = await axios.post(
+      'http://localhost:8765/USERMICROSERVICE/api/auth/login',
+      {
+        email,
+        password,
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
 
-    if (res.user.authorities.some(auth => auth.authority === 'Vendor')) {
-      navigate('/vendordashboard');
-    } else if (res.user.authorities.some(auth => auth.authority === 'Admin')) {
-      navigate('/admindashboard');
+    const data = response.data;
+
+    // Save token and user info to Redux
+    dispatch(setCredentials(data));
+    toast.success('Login successful');
+
+    // Redirect user based on their role
+    if (redirect && redirect !== '/') {
+      navigate(redirect);
     } else {
-      navigate('/');
+      handleRoleRedirect(data.user); // adjust this if backend response shape is different
     }
-  } catch (err) {
-    toast.error(err?.data?.message || err.error);
+
+  } catch (error) {
+    toast.error(error?.response?.data?.message || 'Login failed');
+    console.error('Login Error:', error);
   }
 };
+
 
   return (
     <div
@@ -71,6 +105,7 @@ function LoginScreen() {
           overflow: 'hidden',
         }}
       >
+        {/* Left Form Section */}
         <div
           style={{
             flex: 1,
@@ -91,15 +126,15 @@ function LoginScreen() {
           >
             LOG IN
           </h2>
+
           <form onSubmit={submitHandler} style={{ width: '100%' }}>
-            <div style={{ width: '100%', marginBottom: '10px' }}>
+            <div style={{ marginBottom: '10px' }}>
               <input
                 type="email"
-                id="email"
-                name="email"
                 placeholder="Enter email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                required
                 style={{
                   width: '100%',
                   padding: '10px',
@@ -111,14 +146,14 @@ function LoginScreen() {
                 }}
               />
             </div>
-            <div style={{ width: '100%', marginBottom: '10px' }}>
+
+            <div style={{ marginBottom: '10px' }}>
               <input
                 type="password"
-                id="password"
-                name="password"
                 placeholder="Enter password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                required
                 style={{
                   width: '100%',
                   padding: '10px',
@@ -164,7 +199,7 @@ function LoginScreen() {
           </form>
         </div>
 
-        {/* Right Side - Logo */}
+        {/* Right Logo Section */}
         <div
           style={{
             flex: 1,
@@ -182,13 +217,7 @@ function LoginScreen() {
             alt="FloraMart Logo"
             style={{ width: '120px', marginBottom: '10px' }}
           />
-          <h2
-            style={{
-              fontSize: '18px',
-              color: '#744f41',
-              fontWeight: 'bold',
-            }}
-          >
+          <h2 style={{ fontSize: '18px', color: '#744f41', fontWeight: 'bold' }}>
             Welcome to FloraMart
           </h2>
         </div>
@@ -198,3 +227,5 @@ function LoginScreen() {
 }
 
 export default LoginScreen;
+
+

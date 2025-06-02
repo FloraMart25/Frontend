@@ -1,24 +1,37 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "../css/pstyles.css";
 import "../css/comman.css";
 import Sidebar from "./Sidebar";
-import flower from "../css/image.png";
 import { FaTimes } from "react-icons/fa";
 import { toast, ToastContainer } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
 
 const ProductPage = () => {
-  const [isEnabled, setIsEnabled] = useState(true);
   const [formData, setFormData] = useState({ name: "", price: "", quantity: 1, details: "", image: null });
   const [formErrors, setFormErrors] = useState({});
   const [products, setProducts] = useState([]);
   const [showConfirmAdd, setShowConfirmAdd] = useState(false);
   const [editProduct, setEditProduct] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
+  const [showUpdateConfirm, setShowUpdateConfirm] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
+  const shopowner_id = 1; // Replace with actual shopowner ID from auth context or props
 
-  const [showUpdateConfirm, setShowUpdateConfirm] = useState(false); // triggers the final confirm modal
-  const [selectedImage, setSelectedImage] = useState(null); // for image preview in update modal
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
+    try {
+      const res = await fetch(`http://localhost:8765/USERMICROSERVICE/api/flowers/shopowner/${shopowner_id}`);
+      if (!res.ok) throw new Error("Failed to fetch products");
+      const data = await res.json();
+      setProducts(data);
+    } catch (error) {
+      toast.error("Error loading products: " + error.message);
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -48,51 +61,94 @@ const ProductPage = () => {
     }
   };
 
-  const confirmAddProduct = () => {
-    const newProduct = {
-      id: Date.now(),
-      ...formData,
-      imageUrl: URL.createObjectURL(formData.image),
-    };
-    setProducts((prev) => [newProduct, ...prev]);
-    setFormData({ name: "", price: "", quantity: 1, details: "", image: null });
-    setFormErrors({});
-    setShowConfirmAdd(false);
-    toast.success("Product successfully added!");
-  };
+  const confirmAddProduct = async () => {
+    try {
+      const fd = new FormData();
+      fd.append("name", formData.name);
+      fd.append("price", formData.price);
+      fd.append("quantity", formData.quantity);
+      fd.append("details", formData.details);
+      fd.append("image", formData.image);
+      fd.append("shopowner_id", shopowner_id);
 
-  const handleUpdate = () => {
+      const res = await fetch("http://localhost:8765/USERMICROSERVICE/api/flowers/add", {
+        method: "POST",
+        body: fd,
+      });
+
+      if (!res.ok) throw new Error("Failed to add product");
+
+      const newProduct = await res.json();
+      setProducts((prev) => [newProduct, ...prev]);
+      setFormData({ name: "", price: "", quantity: 1, details: "", image: null });
+      setFormErrors({});
+      setShowConfirmAdd(false);
+      toast.success("Product successfully added!");
+    } catch (error) {
+      toast.error("Add product failed: " + error.message);
+    }
+  };
+  const handleUpdate = async () => {
     if (!editProduct) return;
 
-    const updatedProduct = {
-      ...editProduct,
-      imageUrl: selectedImage
-        ? URL.createObjectURL(selectedImage)
-        : editProduct.imageUrl,
-    };
+    try {
+      const fd = new FormData();
+      fd.append("name", editProduct.name);
+      fd.append("price", editProduct.price);
+      fd.append("quantity", editProduct.quantity);
+      fd.append("details", editProduct.details);
+      if (selectedImage) {
+        fd.append("image", selectedImage);
+      }
 
-    setProducts((prevProducts) =>
-      prevProducts.map((product) =>
-        product.id === updatedProduct.id ? updatedProduct : product
-      )
-    );
+      const res = await fetch(`http://localhost:8765/USERMICROSERVICE/api/flowers/update/${editProduct.flower_id}`, {
+        method: "PUT",
+        body: fd,
+      });
 
-    toast.success("Product successfully updated!");
+      if (!res.ok) throw new Error("Failed to update product");
+
+      const updated = await res.json();
+
+      setProducts((prevProducts) =>
+        prevProducts.map((p) => (p.flower_id === updated.flower_id ? updated : p))
+      );
+
+      toast.success("Product successfully updated!");
+      setEditProduct(null);
+      setSelectedImage(null);
+      setShowUpdateConfirm(false);
+    } catch (error) {
+      toast.error("Update failed: " + error.message);
+    }
   };
 
-  const handleDelete = () => {
-    setProducts(products.filter(p => p.id !== showDeleteConfirm));
-    setShowDeleteConfirm(null);
-    toast.success("Product successfully deleted!");
+
+  const handleDelete = async () => {
+    try {
+      const res = await fetch(`http://localhost:8765/USERMICROSERVICE/api/flowers/delete/${showDeleteConfirm}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) throw new Error("Failed to delete product");
+
+      // Remove from local state after successful deletion
+      setProducts(products.filter(p => p.flower_id !== showDeleteConfirm));
+      toast.success("Product successfully deleted!");
+    } catch (error) {
+      toast.error("Delete failed: " + error.message);
+    } finally {
+      setShowDeleteConfirm(null);
+    }
   };
+
+
 
   return (
     <div className="app-container flex h-screen">
       <Sidebar />
       <div className="main-content flex-1 p-4">
-         <header className="header bg-white shadow p-4 flex justify-between items-center border-b-2 border-black">
-          {/* Header content can go here */}
-        </header>
+        <header className="header bg-white shadow p-4 flex justify-between items-center border-b-2 border-black"></header>
         <ToastContainer />
         <h2 className="dashboard-title mt-4 text-xl font-bold">All <span className="font-light">Product</span></h2>
 
@@ -101,7 +157,6 @@ const ProductPage = () => {
             <div className="add-form w-2/3">
               <h3 className="text-lg font-semibold">Add New <span className="text-blue-500">Product</span></h3>
               <form onSubmit={handleSubmit}>
-                {/* Form Fields */}
                 <input name="name" value={formData.name} onChange={handleChange} placeholder="Product name" />
                 <p className="error">{formErrors.name}</p>
 
@@ -117,25 +172,40 @@ const ProductPage = () => {
                 <input type="file" name="image" onChange={handleFileChange} />
                 <p className="error">{formErrors.image}</p>
 
-                <button type="submit" disabled={!isEnabled}>Add Product</button>
+                <button type="submit">Add Product</button>
               </form>
             </div>
           </div>
 
           <div className="product-list">
             {products.length === 0 ? (
-              <div className="empty-message text-blue-600 text-center text-lg font-medium my-8">List of uploaded products will appear here.</div>
+              <div className="empty-message text-blue-600 text-center text-lg font-medium my-8">
+                List of uploaded products will appear here.
+              </div>
             ) : (
               products.map((product) => (
-                <div key={product.id} className="product-card">
+                <div key={product.flower_id} className="product-card">
                   <p className="price">Nu.{product.price}</p>
-                  <img src={product.imageUrl || flower} alt="product" className="w-full h-40 object-cover" />
+                  <img
+                    src={`http://localhost:8765/USERMICROSERVICE/images/${product.image}`}
+                    onError={(e) => e.target.src = "/default-product.png"}
+                    alt="product"
+                    className="w-full h-40 object-cover"
+                  />
                   <h4 className="name">{product.name}</h4>
                   <p className="description">{product.details}</p>
                   <p className="quantity">Quantity: {product.quantity}</p>
                   <div className="actions">
-                    <button onClick={() => setEditProduct(product)}>Update</button>
-                    <button onClick={() => setShowDeleteConfirm(product.id)}>Delete</button>
+                    <button
+                      onClick={() => {
+                        setEditProduct(product);
+                        setShowEditModal(true);
+                      }}
+                    >
+                      Update
+                    </button>
+
+                    <button onClick={() => setShowDeleteConfirm(product.flower_id)}>Delete</button>
                   </div>
                 </div>
               ))
@@ -143,7 +213,6 @@ const ProductPage = () => {
           </div>
         </div>
 
-        {/* Add Confirm Modal */}
         {showConfirmAdd && (
           <div className="modal-overlay">
             <div className="modal-content">
@@ -168,7 +237,8 @@ const ProductPage = () => {
               {selectedImage ? (
                 <img src={URL.createObjectURL(selectedImage)} alt="Preview" className="preview-img" />
               ) : (
-                <img src={editProduct.imageUrl} alt="Current Product" className="preview-img" />
+                <img src={`http://localhost:8765/USERMICROSERVICE/images/${editProduct.image}`} alt="Current Product" className="preview-img" />
+
               )}
 
               {/* Product Name */}
@@ -212,33 +282,18 @@ const ProductPage = () => {
                 />
                 <span>{selectedImage?.name || "flowerplant.png"}</span>
               </div>
- <button
-              className="update-btn"
-              onClick={() => {
-                setShowUpdateConfirm(true); // show confirmation modal
-                setShowEditModal(false);    // just hide the modal, keep editProduct intact
-              }}
-            >
-              Update
-            </button>
+              <button
+                className="update-btn"
+                onClick={() => {
+                  setShowUpdateConfirm(true); // show confirmation modal
+                  setShowEditModal(false);    // just hide the modal, keep editProduct intact
+                }}
+              >
+                Update
+              </button>
             </div>
           </div>
         )}
-        {showEditModal && editProduct && (
-          <div className="modal-overlay">
-            {/* modal content here */}
-            <button
-              className="update-btn"
-              onClick={() => {
-                setShowUpdateConfirm(true); // show confirmation modal
-                setShowEditModal(false);    // just hide the modal, keep editProduct intact
-              }}
-            >
-              Update
-            </button>
-          </div>
-        )}
-
 
         {/* Confirm Modal */}
         {showUpdateConfirm && (
@@ -281,3 +336,4 @@ const ProductPage = () => {
 };
 
 export default ProductPage;
+
