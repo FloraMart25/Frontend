@@ -14,10 +14,12 @@ const Sidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const handleLogout = () => {
-    console.log("Logging out...");
-    navigate("/");
-  };
+ const handleLogout = () => {
+  console.log("Logging out...");
+  localStorage.removeItem("token"); // ✅ Remove the token
+  localStorage.removeItem("user");  // (Optional) Clear other user data
+  navigate("/"); // ✅ Redirect to initial page (e.g., login or landing)
+};
 
   // Function to check active link
   const isActive = (path) => (location.pathname === path ? "active" : "");

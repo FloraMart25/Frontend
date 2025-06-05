@@ -66,6 +66,9 @@ const submitHandler = async (e) => {
 
     const data = response.data;
 
+    // Store token in localStorage
+    localStorage.setItem('token', data.token);
+
     // Save token and user info to Redux
     dispatch(setCredentials(data));
     toast.success('Login successful');
@@ -74,16 +77,13 @@ const submitHandler = async (e) => {
     if (redirect && redirect !== '/') {
       navigate(redirect);
     } else {
-      handleRoleRedirect(data.user); // adjust this if backend response shape is different
+      handleRoleRedirect(data.user);
     }
-
   } catch (error) {
     toast.error(error?.response?.data?.message || 'Login failed');
     console.error('Login Error:', error);
   }
 };
-
-
   return (
     <div
       style={{

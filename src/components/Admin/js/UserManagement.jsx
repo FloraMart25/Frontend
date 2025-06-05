@@ -1,55 +1,90 @@
-import React, { useState } from "react";
-import { FaUserEdit, FaTrash, FaSearch } from "react-icons/fa";
+import React, { useState, useEffect } from "react";
+import { FaTrash, FaSearch } from "react-icons/fa";
 import Sidebar from "./Sidebar";
-import UserEdit from "./UserEdit"; // Import UserEdit component
-import "../css/styles.css"
-
-
+import "../css/styles.css";
 
 const UserManagement = () => {
-  const allUsers = [
-    { id: 1, profile: "logo.png", name: "Pema Lhamo", email: "pel@gmail.com", registeredDate: "8/3/2024", regNo: "100903047", role: "Vendor", contact: "17688980" },
-    { id: 2, profile: "logo.png", name: "Sonam Zangmo", email: "pel@gmail.com", registeredDate: "8/3/2024", regNo: "100903049", role: "Customer", contact: "17688980" },
-    { id: 3, profile: "logo.png", name: "Ugyen Lhamo", email: "pel@gmail.com", registeredDate: "8/3/2024", regNo: "100903049", role: "Vendor", contact: "17688980" },
-    { id: 4, profile: "logo.png", name: "Sonam Yangchen", email: "pel@gmail.com", registeredDate: "8/3/2024", regNo: "100903049", role: "Vendor", contact: "17688980" },
-    { id: 5, profile: "logo.png", name: "Thinley Dorji", email: "pel@gmail.com", registeredDate: "8/3/2024", regNo: "100903049", role: "Customer", contact: "17688980" },
-    { id: 6, profile: "logo.png", name: "Dorji Wangchuk", email: "dw@gmail.com", registeredDate: "8/4/2024", regNo: "100903051", role: "Vendor", contact: "17688981" },
-    { id: 7, profile: "logo.png", name: "Tenzin Phuntsho", email: "tp@gmail.com", registeredDate: "8/4/2024", regNo: "100903052", role: "Customer", contact: "17688982" },
-    { id: 8, profile: "logo.png", name: "Chimi Lhamo", email: "cl@gmail.com", registeredDate: "8/4/2024", regNo: "100903053", role: "Vendor", contact: "17688983" },
-    { id: 9, profile: "logo.png", name: "Karma Wangmo", email: "kw@gmail.com", registeredDate: "8/4/2024", regNo: "100903054", role: "Customer", contact: "17688984" },
-    { id: 10, profile: "logo.png", name: "Sonam Lhamo", email: "sl@gmail.com", registeredDate: "8/4/2024", regNo: "100903055", role: "Vendor", contact: "17688985" },
-    { id: 11, profile: "logo.png", name: "Tshering Dorji", email: "td@gmail.com", registeredDate: "8/4/2024", regNo: "100903056", role: "Customer", contact: "17688986" },
-    { id: 12, profile: "logo.png", name: "Lhamo Zangmo", email: "lz@gmail.com", registeredDate: "8/4/2024", regNo: "100903057", role: "Vendor", contact: "17688987" },
-    { id: 13, profile: "logo.png", name: "Pema Yangchen", email: "py@gmail.com", registeredDate: "8/4/2024", regNo: "100903058", role: "Customer", contact: "17688988" },
-    { id: 14, profile: "logo.png", name: "Ugyen Wangmo", email: "uw@gmail.com", registeredDate: "8/4/2024", regNo: "100903059", role: "Vendor", contact: "17688989" },
-
-  ];
-
+  const [allUsers, setAllUsers] = useState([]);
   const [filter, setFilter] = useState("All");
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
   const itemsPerPage = 6;
 
-  const filteredUsers = allUsers.filter(user =>
-    (filter === "All" || user.role === filter) &&
-    user.name.toLowerCase().includes(search.toLowerCase())
+ useEffect(() => {
+  const token =`eyJhbGciOiJIUzI1NiJ9.eyJyb2xlcyI6W3siYXV0aG9yaXR5IjoiVmVuZG9yIn1dLCJzdWIiOiJwaHVudHNob0BnbWFpbC5jb20iLCJpYXQiOjE3NDkwNzE2ODYsImV4cCI6MTc0OTEwNzY4Nn0.BKLigXeXn724z66qPNM9lqSiYm9TkFrP8REv0sHUXzM`; // Or wherever you store it
+
+  fetch("http://localhost:8765/USERMICROSERVICE/api/users", {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  })
+    .then(async (res) => {
+      if (!res.ok) throw new Error("Failed to fetch users");
+      const text = await res.text();
+      if (!text) return [];
+      return JSON.parse(text);
+    })
+      .then((data) => {
+        const filtered = data.filter((user) =>
+          user.roles.some((role) => role.name === "Vendor" || role.name === "Client")
+        );
+
+        const formatted = filtered.map((user) => ({
+          id: user.id,
+          profile: "logo.png", // Placeholder image
+          name: user.name,
+          email: user.email,
+          registeredDate: "N/A", // Update if available from backend
+          regNo: user.id || "N/A",
+          role: user.roles[0]?.name || "Unknown",
+          contact: user.phone || "N/A",
+        }));
+
+        setAllUsers(formatted);
+      })
+      .catch((error) => console.error("Error fetching users:", error));
+  }, []);
+
+  // Filter and search users based on current filter and search term
+  const filteredUsers = allUsers.filter(
+    (user) =>
+      (filter === "All" || user.role === filter) &&
+      user.name.toLowerCase().includes(search.toLowerCase())
   );
 
+  // Pagination logic
   const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
-  const displayedUsers = filteredUsers.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  const displayedUsers = filteredUsers.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+const handleDelete = async () => {
+  const token = localStorage.getItem('token');
 
-  const handleEditUser = (user) => {
-    setSelectedUser(user);
-    setIsModalOpen(true);  // Open the Edit User Modal directly
-  };
+  try {
+    const res = await fetch(`http://localhost:8765/USERMICROSERVICE/api/users/${showDeleteConfirm}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
 
-  const handleSaveUser = (updatedUser) => {
-    setSelectedUser(updatedUser);
-    setIsModalOpen(false);  // Close the Edit User Modal after save
-  };
+    if (!res.ok) {
+      throw new Error('Failed to delete user');
+    }
+
+    // Remove from UI if deletion succeeded
+    setAllUsers((prevUsers) => prevUsers.filter((user) => user.id !== showDeleteConfirm));
+    setShowDeleteConfirm(null);
+  } catch (error) {
+    console.error('Delete error:', error);
+    alert('Failed to delete user.');
+  }
+};
 
   return (
     <div className="app-container flex h-screen">
@@ -60,7 +95,8 @@ const UserManagement = () => {
           <span className="title-bold">User</span>
           <span className="title-light">Management</span>
         </h2>
-        <div className="table-container1">
+
+        <div className="table-containeradmin">
           <div className="filter-search-container flex justify-between items-center mb-4">
             <div className="search-container flex items-center">
               <FaSearch className="search-icon" />
@@ -68,65 +104,104 @@ const UserManagement = () => {
                 type="text"
                 className="search-bar"
                 placeholder="Find User"
-                onChange={(e) => setSearch(e.target.value)}
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setCurrentPage(1); // reset page on search
+                }}
               />
             </div>
             <select
               className="filter-dropdown"
-              onChange={(e) => setFilter(e.target.value)}
+              value={filter}
+              onChange={(e) => {
+                setFilter(e.target.value);
+                setCurrentPage(1); // reset page on filter change
+              }}
             >
               <option value="All">All</option>
               <option value="Vendor">Vendor</option>
-              <option value="Customer">Customer</option>
+              <option value="Client">Client</option>
             </select>
           </div>
-          <table>
+
+          <table className="table-containeruser">
             <thead>
               <tr>
                 <th>Profile</th>
                 <th>Name</th>
                 <th>Email ID</th>
                 <th>Registered Date</th>
-                <th>Registered Number</th>
+                <th>Registered No</th>
                 <th>Role</th>
                 <th>Contact No</th>
                 <th>Action</th>
               </tr>
             </thead>
             <tbody>
-              {displayedUsers.map((user) => (
-                <tr key={user.id}>
-                  <td><img src={user.profile} alt="Profile" className="profile-pic" /></td>
-                  <td>{user.name}</td>
-                  <td>{user.email}</td>
-                  <td>{user.registeredDate}</td>
-                  <td>{user.regNo}</td>
-                  <td className={user.role === "Vendor" ? "vendor" : "customer"}>{user.role}</td>
-                  <td>{user.contact}</td>
-                  <td className="actions">
-                    <FaUserEdit
-                      className="edit-icon"
-                      title="Edit"
-                      onClick={() => handleEditUser(user)} // Open the Edit User Modal
-                    />
-                    <FaTrash className="delete-icon" title="Delete" />
+              {displayedUsers.length === 0 ? (
+                <tr>
+                  <td colSpan="8" className="text-center">
+                    No users found.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                displayedUsers.map((user) => (
+                  <tr key={user.id}>
+                    <td>
+                      <img src={user.profile} alt="Profile" className="profile-pic" />
+                    </td>
+                    <td>{user.name}</td>
+                    <td>{user.email}</td>
+                    <td>{user.registeredDate}</td>
+                    <td>{user.regNo}</td>
+                    <td className={user.role === "Vendor" ? "vendor" : "customer"}>
+                      {user.role}
+                    </td>
+                    <td>{user.contact}</td>
+                    <td className="actions">
+                      <FaTrash
+                        className="delete-icon"
+                        title="Delete"
+                        onClick={() => setShowDeleteConfirm(user.id)}
+                      />
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
 
+        {/* Delete Confirmation Modal */}
+        {showDeleteConfirm !== null && (
+          <div className="modal-overlay">
+            <div className="modal-content">
+              <p>Are you sure you want to delete this user?</p>
+              <div className="modal-buttons">
+                <button className="yes" onClick={handleDelete}>
+                  Yes
+                </button>
+                <button className="no" onClick={() => setShowDeleteConfirm(null)}>
+                  No
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Pagination */}
         <div className="pagination flex justify-center mt-4">
-          {Array.from({ length: totalPages }, (_, i) => (
-            <button
-              key={i + 1}
-              className={`page-btn ${currentPage === i + 1 ? "active" : ""}`}
-              onClick={() => setCurrentPage(i + 1)}
-            >
-              {i + 1}
-            </button>
-          ))}
+          {totalPages > 0 &&
+            Array.from({ length: totalPages }, (_, i) => (
+              <button
+                key={i + 1}
+                className={`page-btn ${currentPage === i + 1 ? "active" : ""}`}
+                onClick={() => setCurrentPage(i + 1)}
+              >
+                {i + 1}
+              </button>
+            ))}
         </div>
       </div>
     </div>

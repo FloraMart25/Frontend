@@ -1,5 +1,5 @@
 import "./App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 // Admin
 import Login from "./components/Admin/js/Login.jsx";
@@ -29,38 +29,45 @@ function App() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/enter-otp" element={<EnterOTP />} />
           <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/admindashboard" element={<AdminDashboard />} />
+          <Route path="/user-management" element={<UserManagement />} />
+          <Route path="/vendor-application" element={<VendorApplication />} />
+          <Route path="/vendordashboard" element={<VendorDashboard />} />
+          <Route path="/order-page" element={<OrderPage />} />
+          <Route path="/product" element={<ProductPage />} />
+          <Route path="/setting" element={<SettingsPage />} />
 
           {/* Admin Routes */}
-          <Route
+          {/* <Route
             path="/admindashboard"
             element={
-              <ProtectedRoute allowedRoles={['Admin']}>
+              <ProtectedRoute allowedRoles={["Admin"]}>
                 <AdminDashboard />
               </ProtectedRoute>
             }
-          />
-          <Route
+          /> */}
+          {/* <Route
             path="/user-management"
             element={
-              <ProtectedRoute allowedRoles={['Admin']}>
+              <ProtectedRoute allowedRoles={["Admin"]}>
                 <UserManagement />
               </ProtectedRoute>
             }
-          />
-          <Route
+          /> */}
+          {/* <Route
             path="/vendor-application"
             element={
-              <ProtectedRoute allowedRoles={['Admin']}>
+              <ProtectedRoute allowedRoles={["Admin"]}>
                 <VendorApplication />
               </ProtectedRoute>
             }
-          />
+          /> */}
 
           {/* Vendor Routes */}
-          <Route
+          {/* <Route
             path="/vendordashboard"
             element={
-              <ProtectedRoute allowedRoles={['Vendor']}>
+              <ProtectedRoute allowedRoles={["Vendor"]}>
                 <VendorDashboard />
               </ProtectedRoute>
             }
@@ -68,7 +75,7 @@ function App() {
           <Route
             path="/order-page"
             element={
-              <ProtectedRoute allowedRoles={['Vendor']}>
+              <ProtectedRoute allowedRoles={["Vendor"]}>
                 <OrderPage />
               </ProtectedRoute>
             }
@@ -76,7 +83,7 @@ function App() {
           <Route
             path="/product"
             element={
-              <ProtectedRoute allowedRoles={['Vendor']}>
+              <ProtectedRoute allowedRoles={["Vendor"]}>
                 <ProductPage />
               </ProtectedRoute>
             }
@@ -84,11 +91,14 @@ function App() {
           <Route
             path="/setting"
             element={
-              <ProtectedRoute allowedRoles={['Vendor']}>
+              <ProtectedRoute allowedRoles={["Vendor"]}>
                 <SettingsPage />
               </ProtectedRoute>
             }
-          />
+          /> */}
+
+          {/* Fallback Route */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
     </div>

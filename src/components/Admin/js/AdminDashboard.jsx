@@ -8,7 +8,7 @@ const AdminDashboard = () => {
     { id: 1, appNo: "1002", name: "Sangay Wangmo", cid: "10905002378", submittedOn: "8/3/2024", license: "100903049" },
     { id: 2, appNo: "1002", name: "Sangay Wangmo", cid: "10905002378", submittedOn: "8/3/2024", license: "100903049" },
     { id: 3, appNo: "1002", name: "Sangay Wangmo", cid: "10905002378", submittedOn: "8/3/2024", license: "100903049" },
-    
+
   ];
 
   return (
@@ -41,12 +41,12 @@ const AdminDashboard = () => {
           </div>
         </div>
         <h2 className="section-title">Recent Application</h2>
-        <div className="table-container">
-        <div className="search-container">
-  <FaSearch className="search-icon" />
-  <input type="text" className="search-bar" placeholder="Find User" />
-</div>
-          <table>
+        <div className="table-containeradmin">
+          <div className="search-container">
+            <FaSearch className="search-icon" />
+            <input type="text" className="search-bar" placeholder="Find User" />
+          </div>
+          <table className="table-containeruser">
             <thead>
               <tr>
                 <th>APPNO</th>
@@ -55,6 +55,7 @@ const AdminDashboard = () => {
                 <th>Submitted On</th>
                 <th>Licensee</th>
                 <th>Attachment</th>
+                <th>View</th>
                 <th>Action</th>
               </tr>
             </thead>
@@ -67,11 +68,13 @@ const AdminDashboard = () => {
                   <td>{app.submittedOn}</td>
                   <td>{app.license}</td>
                   <td><FaClipboardList className="file-icon" /></td>
-                  <td className="action-buttons">
+                  <td className="action">
                     <button className="view-btn"><FaEye /> View</button>
-                     <button className="action-btn delete-btn">
-                        <FaTrash />
-                      </button>
+                    </td>
+                    <td className="action">
+                    <button className="action-btn delete-btn">
+                      <FaTrash />
+                    </button>
                   </td>
                 </tr>
               ))}

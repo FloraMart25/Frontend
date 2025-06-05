@@ -138,7 +138,7 @@
   }
   .product-list {
     overflow-y: auto;
-    margin-top: 20px;
+    margin-top: 80px;
     padding: 20px;
     flex-grow: 1;
     display: grid;

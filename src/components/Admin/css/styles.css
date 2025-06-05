@@ -154,17 +154,29 @@ body {
     border-radius: 10px;
     box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
   }
+    /* Table Section */
+  .table-containeradmin {
+    background: rgba(149, 147, 148, 0.1);
+    margin: auto;
+    margin-bottom: 30px;
+    border-radius: 10px;
+    width: 90%;
+    height: 80%;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+  }
   /* Table Section */
-  .table-container1 {
+  .table-containeruser {
     justify-content: center;
     background: rgba(149, 147, 148, 0.1);
-    margin-top: -6vh;
-    margin-bottom: 10px;
-    margin-right: 15px;
-    margin-left: 15px;
+    margin: auto;
+    width: 90%;
+    height: 80%;
+    margin-bottom: 30px;
+    border-radius: 10px;
     border-radius: 10px;
     box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
   }
+   
   
   .table-title {
     font-size: 10px;
@@ -196,9 +208,10 @@ body {
   display: flex;
   justify-content: center; /* Center buttons horizontally */
   align-items: center;
-  gap: 8px; /* Add space between buttons */
+  gap: 4px; /* Add space between buttons */
   padding-left: 30px;
 }
+
 
 .action-btn, .view-btn, .delete-btn {
   display: flex;
@@ -223,6 +236,7 @@ body {
   background-color: #F5B3AD;
   color: #81504D;
   border: none;
+  
 }
 
 /* Center the file icon */
@@ -235,6 +249,9 @@ body {
 }
 
 .view-btn {
+  display: flex;
+  justify-content: center;
+  align-items: center;
   background-color: #F5B3AD;
   color: #81504D;
   border:#F5B3AD;
@@ -314,6 +331,7 @@ body {
 .delete-icon{
   color: #A52727;
   margin-left: 10px;
+  cursor: pointer;
 }
 
 .sidebar-logo {
